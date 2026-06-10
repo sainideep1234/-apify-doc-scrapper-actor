@@ -1,0 +1,13 @@
+{
+  "mode": "INGEST",
+  "sitemapUrl": "https://crawlee.dev",
+  "followLinks": true,
+  "extractMetadata": true,
+  "urlPatterns": [],
+  "maxRequestsPerCrawl": 100,
+  "maxDepth": 3,
+  "debugLog": false,
+  "weaviateHost": "YOUR_CLUSTER.weaviate.network",
+  "weaviateApiKey": "YOUR_WEAVIATE_API_KEY",
+  "openaiApiKey": "YOUR_OPENAI_API_KEY"
+}

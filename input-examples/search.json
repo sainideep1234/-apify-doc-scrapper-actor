@@ -1,0 +1,8 @@
+{
+  "mode": "SEARCH",
+  "query": "How do I install and configure Crawlee?",
+  "useSmallLLM": true,
+  "weaviateHost": "YOUR_CLUSTER.weaviate.network",
+  "weaviateApiKey": "YOUR_WEAVIATE_API_KEY",
+  "openaiApiKey": "YOUR_OPENAI_API_KEY"
+}

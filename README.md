@@ -43,36 +43,42 @@ WEAVIATE_API_KEY=your-weaviate-api-key
 OPENAI_API_KEY=sk-your-openai-key
 ```
 
-**3. Create the input folder**
+**3. Create the storage folder**
+
+The `storage/` folder is gitignored (it holds local state, hashes, datasets). You need to create it manually — it will never exist after a fresh clone.
 
 ```bash
 mkdir -p storage/key_value_stores/default
 ```
 
+This is where the actor reads its `INPUT.json` from when you run `apify run` locally.
+
+**4. Copy an input template**
+
+This repo includes ready-to-use templates in the [`input-examples/`](./input-examples/) folder. Copy one and fill in your credentials:
+
+```bash
+# For INGEST (scrape & index a docs site)
+cp input-examples/ingest.json storage/key_value_stores/default/INPUT.json
+
+# For SEARCH (query what you've indexed)
+cp input-examples/search.json storage/key_value_stores/default/INPUT.json
+```
+
+Then open `storage/key_value_stores/default/INPUT.json` and replace:
+- `YOUR_CLUSTER.weaviate.network` → your Weaviate host
+- `YOUR_WEAVIATE_API_KEY` → your Weaviate API key
+- `YOUR_OPENAI_API_KEY` → your OpenAI key
+
+> **Note:** The `storage/` folder is in `.gitignore` — your credentials inside `INPUT.json` will never be committed to git.
+
 ---
 
 ## Run: INGEST (Scrape & Index Docs)
 
-Create `storage/key_value_stores/default/INPUT.json` with the following content — replace the credential values with your own:
-
-```json
-{
-  "mode": "INGEST",
-  "sitemapUrl": "https://crawlee.dev",
-  "followLinks": true,
-  "extractMetadata": true,
-  "urlPatterns": [],
-  "maxRequestsPerCrawl": 100,
-  "maxDepth": 3,
-  "weaviateHost": "your-cluster.weaviate.network",
-  "weaviateApiKey": "your-weaviate-api-key",
-  "openaiApiKey": "sk-your-openai-key"
-}
-```
-
-Then run:
-
 ```bash
+cp input-examples/ingest.json storage/key_value_stores/default/INPUT.json
+# Fill in your credentials in INPUT.json, then:
 apify run
 ```
 
@@ -93,22 +99,9 @@ INFO  ✅ Pipeline finished.
 
 ## Run: SEARCH (Query the Indexed Docs)
 
-Update `storage/key_value_stores/default/INPUT.json` to SEARCH mode:
-
-```json
-{
-  "mode": "SEARCH",
-  "query": "How do I install and configure Crawlee?",
-  "useSmallLLM": true,
-  "weaviateHost": "your-cluster.weaviate.network",
-  "weaviateApiKey": "your-weaviate-api-key",
-  "openaiApiKey": "sk-your-openai-key"
-}
-```
-
-Then run:
-
 ```bash
+cp input-examples/search.json storage/key_value_stores/default/INPUT.json
+# Fill in your credentials and change the "query" field, then:
 apify run
 ```
 
