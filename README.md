@@ -1,113 +1,166 @@
-# TypeScript Crawlee & CheerioCrawler Actor Template
+# Weaviate Knowledge Base Actor
 
-<!-- This is an Apify template readme -->
+A documentation scraper and semantic search actor built with [Crawlee](https://crawlee.dev/) and [Weaviate](https://weaviate.io/). It scrapes any documentation site, stores content as vector embeddings in Weaviate, and lets you query it with natural language.
 
-This template example was built with [Crawlee](https://crawlee.dev/) to scrape data from a website using [Cheerio](https://cheerio.js.org/) wrapped into [CheerioCrawler](https://crawlee.dev/api/cheerio-crawler/class/CheerioCrawler).
+## What it does
 
-## Quick Start
+- **INGEST mode** — Crawls a docs site, embeds the content with OpenAI, and pushes it to Weaviate
+- **SEARCH mode** — Takes a natural language question, expands it with GPT-4o-mini, and returns the most relevant docs
 
-Once you've installed the dependencies, start the Actor:
+---
+
+## Prerequisites
+
+Before running locally you need accounts and API keys for:
+
+| Service | Where to get it |
+|---|---|
+| [Weaviate Cloud](https://console.weaviate.cloud) | Create a free cluster → copy Host URL and API Key |
+| [OpenAI](https://platform.openai.com/api-keys) | Create an API key |
+| [Apify CLI](https://docs.apify.com/cli) | `npm install -g apify-cli` |
+
+---
+
+## Local Setup
+
+**1. Install dependencies**
+
+```bash
+npm install
+```
+
+**2. Set your API keys**
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in your values:
+
+```
+WEAVIATE_HOST=your-cluster.weaviate.network
+WEAVIATE_API_KEY=your-weaviate-api-key
+OPENAI_API_KEY=sk-your-openai-key
+```
+
+**3. Create the input folder**
+
+```bash
+mkdir -p storage/key_value_stores/default
+```
+
+---
+
+## Run: INGEST (Scrape & Index Docs)
+
+Create `storage/key_value_stores/default/INPUT.json` with the following content — replace the credential values with your own:
+
+```json
+{
+  "mode": "INGEST",
+  "sitemapUrl": "https://crawlee.dev",
+  "followLinks": true,
+  "extractMetadata": true,
+  "urlPatterns": [],
+  "maxRequestsPerCrawl": 100,
+  "maxDepth": 3,
+  "weaviateHost": "your-cluster.weaviate.network",
+  "weaviateApiKey": "your-weaviate-api-key",
+  "openaiApiKey": "sk-your-openai-key"
+}
+```
+
+Then run:
 
 ```bash
 apify run
 ```
 
-Once your Actor is ready, you can push it to the Apify Console:
+**Expected output:**
+
+```
+INFO  🚀 Starting Actor in INGEST mode
+INFO  [1/100] Processing (99 left): https://crawlee.dev/js/docs/quick-start
+INFO  [UPDATE] Content changed for ... Re-indexing.
+INFO  [SUCCESS] Indexing complete for ...
+INFO  ✅ Pipeline finished.
+```
+
+> **Tip:** Change `sitemapUrl` to any docs site you want to index (e.g. `https://nextjs.org`, `https://docs.stripe.com`).  
+> Increase `maxRequestsPerCrawl` to index more pages. Set `urlPatterns: []` to index all docs sections.
+
+---
+
+## Run: SEARCH (Query the Indexed Docs)
+
+Update `storage/key_value_stores/default/INPUT.json` to SEARCH mode:
+
+```json
+{
+  "mode": "SEARCH",
+  "query": "How do I install and configure Crawlee?",
+  "useSmallLLM": true,
+  "weaviateHost": "your-cluster.weaviate.network",
+  "weaviateApiKey": "your-weaviate-api-key",
+  "openaiApiKey": "sk-your-openai-key"
+}
+```
+
+Then run:
 
 ```bash
-apify login # first, you need to log in if you haven't already done so
-
-apify push
+apify run
 ```
+
+**Expected output:**
+
+```
+INFO  🚀 Starting Actor in SEARCH mode
+INFO  🧠 Expanding Query with Small LLM...
+INFO  🔍 Executing Hybrid Search...
+INFO  ✅ Found 5 results for query: "How do I install and configure Crawlee?"
+INFO     Title: Quick Start
+INFO     URL: https://crawlee.dev/js/docs/quick-start
+INFO     Content Preview: The fastest way to try Crawlee...
+```
+
+> **Tip:** Change `"query"` to any question you want. Set `"useSmallLLM": false` to skip query expansion and search directly.
+
+---
+
+## How Change Detection Works
+
+On the **second INGEST run**, pages that haven't changed are automatically skipped — no re-embedding, no API cost. Only new or modified pages are re-indexed.
+
+This is done via SHA-256 hashing of each page's content, stored in the local KV store under `storage/key_value_stores/SITEMAP_STATE/`.
+
+---
 
 ## Project Structure
 
-```text
+```
 .actor/
-├── actor.json # Actor config: name, version, env vars, runtime settings
-├── dataset_schena.json # Structure and representation of data produced by an Actor
-├── input_schema.json # Input validation & Console form definition
-└── output_schema.json # Specifies where an Actor stores its output
+├── actor.json          # Actor config
+├── input_schema.json   # Input validation & Console form
+├── output_schema.json  # Output definition
+└── dataset_schema.json # Dataset column definitions
 src/
-└── main.ts # Actor entry point and orchestrator
-storage/ # Local storage (mirrors Cloud during development)
-├── datasets/ # Output items (JSON objects)
-├── key_value_stores/ # Files, config, INPUT
-└── request_queues/ # Pending crawl requests
-Dockerfile # Container image definition
+├── main.ts             # Entry point, reads input, calls pipelines
+├── fetchpipeline.ts    # INGEST: crawl → chunk → embed → upload
+├── searchPipeline.ts   # SEARCH: query expansion → vector search → display
+├── sitemapDiscovery.ts # Sitemap + intelligent URL discovery
+├── utils.ts            # Embedding, chunking, Weaviate helpers
+└── types.ts            # TypeScript types
+Dockerfile              # Container definition for Apify Cloud
 ```
 
-For more information, see the [Actor definition](https://docs.apify.com/platform/actors/development/actor-definition) documentation.
+---
 
-## How it works
-
-This code is a TypeScript script that uses Cheerio to scrape data from a website. It then stores the website titles in a dataset.
-
-- The crawler starts with URLs provided from the input `startUrls` field defined by the input schema. Number of scraped pages is limited by `maxPagesPerCrawl` field from the input schema.
-- The crawler uses `requestHandler` for each URL to extract the data from the page with the Cheerio library and to save the title and URL of each page to the dataset. It also logs out each result that is being saved.
-
-## What's included
-
-- **[Apify SDK](https://docs.apify.com/sdk/js)** - toolkit for building [Actors](https://apify.com/actors)
-- **[Crawlee](https://crawlee.dev/)** - web scraping and browser automation library
-- **[Input schema](https://docs.apify.com/platform/actors/development/input-schema)** - define and easily validate a schema for your Actor's input
-- **[Dataset](https://docs.apify.com/sdk/python/docs/concepts/storages#working-with-datasets)** - store structured data where each object stored has the same attributes
-- **[Cheerio](https://cheerio.js.org/)** - a fast, flexible & elegant library for parsing and manipulating HTML and XML
-- **[Proxy configuration](https://docs.apify.com/platform/proxy)** - rotate IP addresses to prevent blocking
-
-## Resources
-
-- [Quick Start](https://docs.apify.com/platform/actors/development/quick-start) guide for building your first Actor
-- [Video tutorial](https://www.youtube.com/watch?v=yTRHomGg9uQ) on building a scraper using CheerioCrawler
-- [Written tutorial](https://docs.apify.com/academy/web-scraping-for-beginners/challenge) on building a scraper using CheerioCrawler
-- [Web scraping with Cheerio in 2023](https://blog.apify.com/web-scraping-with-cheerio/)
-- How to [scrape a dynamic page](https://blog.apify.com/what-is-a-dynamic-page/) using Cheerio
-- [Integration with Zapier](https://apify.com/integrations), Make, Google Drive and others
-- [Video guide on getting data using Apify API](https://www.youtube.com/watch?v=ViYYDHSBAKM)
-
-## Creating Actors with templates
-
-[How to create Apify Actors with web scraping code templates](https://www.youtube.com/watch?v=u-i-Korzf8w)
-
-
-## Getting started
-
-For complete information [see this article](https://docs.apify.com/platform/actors/development#build-actor-locally). To run the Actor use the following command:
+## Deploy to Apify Cloud
 
 ```bash
-apify run
+apify login   # enter your Apify API token
+apify push    # builds and deploys the actor
 ```
 
-## Deploy to Apify
-
-### Connect Git repository to Apify
-
-If you've created a Git repository for the project, you can easily connect to Apify:
-
-1. Go to [Actor creation page](https://console.apify.com/actors/new)
-2. Click on **Link Git Repository** button
-
-### Push project on your local machine to Apify
-
-You can also deploy the project on your local machine to Apify without the need for the Git repository.
-
-1. Log in to Apify. You will need to provide your [Apify API Token](https://console.apify.com/account/integrations) to complete this action.
-
-    ```bash
-    apify login
-    ```
-
-2. Deploy your Actor. This command will deploy and build the Actor on the Apify Platform. You can find your newly created Actor under [Actors -> My Actors](https://console.apify.com/actors?tab=my).
-
-    ```bash
-    apify push
-    ```
-
-## Documentation reference
-
-To learn more about Apify and Actors, take a look at the following resources:
-
-- [Apify SDK for JavaScript documentation](https://docs.apify.com/sdk/js)
-- [Apify SDK for Python documentation](https://docs.apify.com/sdk/python)
-- [Apify Platform documentation](https://docs.apify.com/platform)
-- [Join our developer community on Discord](https://discord.com/invite/jyEM2PRvMU)
+After deploying, open the Actor in [Apify Console](https://console.apify.com/actors) and fill in credentials via the UI — no `INPUT.json` needed on the cloud.
