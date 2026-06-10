@@ -1,0 +1,94 @@
+{
+    "actorSpecification": 1,
+    "fields": {},
+    "views": {
+        "overview": {
+            "title": "Search Results Overview",
+            "transformation": {
+                "fields": ["originalQuery", "expandedQuery", "sourceFilter", "resultsCount", "timestamp", "results"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "originalQuery": {
+                        "label": "Search Query",
+                        "format": "text"
+                    },
+                    "expandedQuery": {
+                        "label": "Expanded Query",
+                        "format": "text"
+                    },
+                    "sourceFilter": {
+                        "label": "Source Filter",
+                        "format": "text"
+                    },
+                    "resultsCount": {
+                        "label": "# of Results",
+                        "format": "number"
+                    },
+                    "timestamp": {
+                        "label": "Search Time",
+                        "format": "date"
+                    },
+                    "results": {
+                        "label": "Results from Weaviate",
+                        "format": "array"
+                    }
+                }
+            }
+        },
+        "detailed": {
+            "title": "Detailed Results",
+            "transformation": {
+                "fields": ["rank", "title", "content", "source_url", "chunk_index", "description", "headings", "has_code", "code_languages", "url_path"],
+                "unwind": ["results"],
+                "flatten": ["results"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "rank": {
+                        "label": "Rank",
+                        "format": "number"
+                    },
+                    "title": {
+                        "label": "Page Title",
+                        "format": "text"
+                    },
+                    "content": {
+                        "label": "Content",
+                        "format": "text"
+                    },
+                    "source_url": {
+                        "label": "Source URL",
+                        "format": "link"
+                    },
+                    "chunk_index": {
+                        "label": "Chunk #",
+                        "format": "number"
+                    },
+                    "description": {
+                        "label": "Description",
+                        "format": "text"
+                    },
+                    "headings": {
+                        "label": "Headings",
+                        "format": "array"
+                    },
+                    "has_code": {
+                        "label": "Has Code",
+                        "format": "boolean"
+                    },
+                    "code_languages": {
+                        "label": "Code Languages",
+                        "format": "text"
+                    },
+                    "url_path": {
+                        "label": "URL Path",
+                        "format": "text"
+                    }
+                }
+            }
+        }
+    }
+}

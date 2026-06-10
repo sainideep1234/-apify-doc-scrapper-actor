@@ -1,0 +1,76 @@
+{
+    "title": "Weaviate Knowledge Base Actor",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "mode": {
+            "title": "Operation Mode",
+            "type": "string",
+            "description": "Choose 'INGEST' to scrape and upload data, or 'SEARCH' to query your database.",
+            "editor": "select",
+            "default": "SEARCH",
+            "enum": ["INGEST", "SEARCH"],
+            "enumTitles": ["Ingest (Write Path)", "Search (Read Path)"]
+        },
+        "sitemapUrl": {
+            "title": "Website URL or Sitemap URL",
+            "type": "string",
+            "description": "REQUIRED for Ingest Mode: Base domain (e.g., 'nextjs.org') OR direct sitemap URL. The system will auto-discover sitemaps and intelligently find docs/blog/content pages.",
+            "editor": "textfield",
+            "prefill": "https://nextjs.org"
+        },
+        "query": {
+            "title": "Search Query",
+            "type": "string",
+            "description": "REQUIRED for Search Mode: The question you want to ask.",
+            "editor": "textfield",
+            "prefill": "How do I fix a 401 error?"
+        },
+        "useSmallLLM": {
+            "title": "Use AI Query Expansion",
+            "type": "boolean",
+            "description": "If enabled, uses GPT-4o-mini to improve search results by adding relevant keywords.",
+            "default": true
+        },
+        "filterBySource": {
+            "title": "Filter by Source (Optional)",
+            "type": "string",
+            "description": "Filter search results to only show results from a specific domain (e.g., 'stripe.com'). If sitemapUrl is provided, it will auto-filter by that domain.",
+            "editor": "textfield",
+            "prefill": ""
+        },
+        "maxRequestsPerCrawl": {
+            "title": "Max Requests",
+            "type": "integer",
+            "description": "Maximum number of pages to crawl in Ingest mode.",
+            "default": 100
+        },
+        "section_credentials": {
+            "title": "Credentials",
+            "type": "string",
+            "description": "API Keys and Host URLs",
+            "editor": "hidden"
+        },
+        "weaviateHost": {
+            "title": "Weaviate Host URL",
+            "type": "string",
+            "description": "e.g., your-cluster.weaviate.network",
+            "editor": "textfield"
+        },
+        "weaviateApiKey": {
+            "title": "Weaviate API Key",
+            "type": "string",
+            "description": "The API Key for your Weaviate instance (found in Weaviate Cloud Console).",
+            "editor": "textfield",
+            "isSecret": true
+        },
+        "openaiApiKey": {
+            "title": "OpenAI API Key",
+            "type": "string",
+            "description": "Your OpenAI API key starting with 'sk-'.",
+            "editor": "textfield",
+            "isSecret": true
+        }
+    },
+    "required": ["mode", "weaviateHost", "weaviateApiKey", "openaiApiKey"]
+}

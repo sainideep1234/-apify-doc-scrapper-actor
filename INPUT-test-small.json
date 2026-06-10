@@ -1,0 +1,10 @@
+{
+  "mode": "INGEST",
+  "sitemapUrl": "https://crawlee.dev/docs/quick-start",
+  "followLinks": true,
+  "extractMetadata": true,
+  "urlPatterns": ["/docs/quick-start"],
+  "maxRequestsPerCrawl": 10,
+  "maxDepth": 2,
+  "debugLog": true
+}

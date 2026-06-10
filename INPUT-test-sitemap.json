@@ -1,0 +1,8 @@
+{
+  "mode": "INGEST",
+  "sitemapUrl": "https://crawlee.dev/sitemap.xml",
+  "followLinks": false,
+  "extractMetadata": true,
+  "maxRequestsPerCrawl": 20,
+  "debugLog": true
+}

@@ -1,0 +1,19 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "Documentation Scraper Output",
+    "description": "Search results from Weaviate vector database",
+    "properties": {
+        "searchResults": {
+            "type": "string",
+            "title": "Search Results Overview",
+            "description": "View all search queries and their results",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+        },
+        "detailedResults": {
+            "type": "string",
+            "title": "Detailed Results",
+            "description": "View individual content chunks from Weaviate",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=detailed"
+        }
+    }
+}
